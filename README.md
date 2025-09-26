@@ -1,7 +1,6 @@
 # Projeto LP2 - Chat Multiusuário TCP
 
 **Tema:** Servidor de Chat Multiusuário (TCP)  
-**Etapa:** 1 - Biblioteca libtslog + Arquitetura
 
 ## Biblioteca libtslog
 
