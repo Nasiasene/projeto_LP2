@@ -18,32 +18,88 @@
 ## Diagrama de Sequência Cliente-Servidor
 
 ```
-Cliente                    Servidor                    Outros Clientes
-  |                           |                           |
-[1] Conecta TCP               |                           |
-  |----------socket()-------->|                           |
-  |                       Aceita conexão                 |
-  |<--------accept()----------|                           |
-  |                           |                           |
-[2] Envia username            |                           |
-  |-------"João"------------->|                           |
-  |                       Cria thread                    |
-  |                       Adiciona à lista               |
-  |                           |                           |
-[3] Envia mensagem            |                           |
-  |-----"Olá pessoal"-------->|                           |
-  |                       Adiciona ao histórico          |
-  |                       Faz broadcast                  |
-  |                           |--------"[12:30] João: Olá pessoal"-------->|
-  |                           |                           |
-[4] Recebe mensagens          |                           |
-  |<-----"[12:31] Ana: Oi"----| <------"Ana: Oi"<---------|
-  |                           |                           |
-[5] Cliente desconecta        |                           |
-  |-------close()------------>|                           |
-  |                       Remove da lista                |
-  |                       Encerra thread                 |
+   Cliente João      Servidor Main      Thread Cliente     Cliente Ana        Logging
+        |                  |                  |                |                |
+        |                  |                  |                |                |
+ [1]    |--- connect() --->|                  |                |                |
+        |<--- accept() ----|                  |                |                |
+        |                  |                  |                |                |
+        |                  |-- create_thread->|                |                |
+        |                  |                  |- log("conexão")---------------> |
+        |                  |                  |                |                |
+ [2]    |--- send("João")----------------->|                   |                |
+        |                  |                  |                |                |
+        |                  |                  |- add_client()--|                |
+        |                  |                  |- log("João entrou")-----------> |
+        |                  |                  |                |                |
+ [3]    |--- send("Olá!")-------------------->|                |                |
+        |                  |                  |                |                |
+        |                  |                  |- save_msg()----|                |
+        |                  |                  |- log("msg João")--------------> |
+        |                  |                  |                |                |
+        |                  |                  |- broadcast()-->|                |
+        |                  |                  |  "[12:30] João: Olá!"           |
+        |                  |                  |                |                |
+ [4]    |                  |                  |<-- send("Oi")- |                |
+        |                  |                  |                |                |
+        |                  |                  |- save_msg()----|                |
+        |                  |                  |- log("msg Ana")---------------> |
+        |                  |                  |                |                |
+        |<-- broadcast()---|                  |                |                |
+        |  "[12:31] Ana: Oi"                  |                |                |
+        |                  |                  |                |                |
+ [5]    |--- disconnect--->|                  |                |                |
+        |                  |                  |- remove_client()                |
+        |                  |                  |- log("João saiu")-------------> |
+        |                  |<-- thread_exit---|                |                |
+        X                  |                  X                |                |
 ```
+
+### Componentes do Sistema:
+
+| Componente           | Responsabilidade                                |
+| -------------------- | ----------------------------------------------- |
+| **Cliente João/Ana** | Interface CLI, conexão TCP, envio/recepção      |
+| **Servidor Main**    | Accept de conexões, gerenciamento de threads    |
+| **Thread Cliente**   | Handler dedicado, broadcast, gerência de estado |
+| **Logging**          | Sistema thread-safe de logs (libtslog)          |
+
+### Fluxo Detalhado:
+
+**[1] Conexão TCP:**
+
+- Cliente cria socket e conecta ao servidor
+- Servidor aceita conexão na thread principal
+- Log de nova conexão é registrado
+
+**[2] Autenticação:**
+
+- Cliente envia nome de usuário
+- Servidor cria thread dedicada para o cliente
+- Cliente é adicionado à lista de clientes ativos
+- Entrada do usuário é logada
+
+**[3] Envio de Mensagem:**
+
+- Cliente envia mensagem através de sua thread
+- Servidor adiciona ao histórico protegido por mutex
+- Mensagem é logada com timestamp
+- Broadcast é feito para todos os outros clientes
+
+**[4] Recepção de Mensagens:**
+
+- Outro cliente envia mensagem
+- Servidor processa e faz broadcast
+- Todos os clientes (exceto remetente) recebem a mensagem
+- Operação é logada
+
+**[5] Desconexão:**
+
+- Cliente fecha conexão (graceful ou abrupta)
+- Servidor detecta desconexão na thread do cliente
+- Cliente é removido da lista (protegida por mutex)
+- Thread do cliente é finalizada
+- Desconexão é logada
 
 ## Mapeamento Requisitos → Código
 
@@ -162,4 +218,3 @@ void ChatServer::broadcast_message(const Message& msg, int sender_socket) {
 - **Arquivos C++**: 8
 - **Threads simultâneas**: 1 servidor + N clientes (máx 50)
 - **Recursos protegidos**: 2 (lista clientes + histórico)
-- **Mutexes utilizados**: 3 (clients_mutex, messages_mutex, log_mutex)
