@@ -1,8 +1,6 @@
 # Projeto LP2 - Chat Multiusuário TCP
 
 **Tema:** Servidor de Chat Multiusuário (TCP)  
-**Etapa Atual:** 2 - Protótipo CLI de Comunicação ✅
-
 ## Início Rápido
 
 ### Compilar
@@ -30,23 +28,6 @@ make client                           # Pergunta usuário
 ./tests/test_chat.sh     # 3 clientes simultâneos
 ./tests/test_chat.sh 5   # 5 clientes simultâneos
 ```
-
-## ✅ Funcionalidades Implementadas
-
-### Etapa 1 - Biblioteca libtslog + Arquitetura
-
-- ✅ Biblioteca de logging thread-safe com `std::mutex`
-- ✅ Arquitetura básica definida (headers)
-- ✅ Teste com múltiplas threads
-
-### Etapa 2 - Protótipo CLI de Comunicação
-
-- ✅ Servidor TCP concorrente (uma thread por cliente)
-- ✅ Cliente CLI funcional com comandos básicos
-- ✅ Comunicação em rede via sockets TCP
-- ✅ Broadcast de mensagens para todos os clientes
-- ✅ Logging integrado (libtslog)
-- ✅ Scripts de teste automático
 
 ## Conceitos de Concorrência Usados
 
@@ -94,7 +75,23 @@ projeto_lp2/
 
 Consulte a pasta `docs/` para:
 
-- Arquitetura do sistema
-- Análise crítica com IA
-- Relatórios das etapas
-- Diagramas de sequência
+- **Arquitetura do sistema** (`arquitetura.md`)
+- **Análise crítica com IA** (`analise_critica_ia.md`)
+- **Relatórios de todas as etapas** (`etapa1_*.md`, `etapa2_*.md`)
+- **Relatório final da Etapa 3** (`etapa3_relatorio_final.md`)
+- **Diagrama de sequência** e mapeamento requisitos→código
+
+## Status do Projeto
+
+✅ **Etapa 1** - Biblioteca libtslog + Arquitetura (Tag: v1-logging)  
+✅ **Etapa 2** - Protótipo CLI de Comunicação (Tag: v2-cli)  
+✅ **Etapa 3** - Sistema Completo (Tag: v3-final)
+
+**Funcionalidades Obrigatórias do Tema A - Chat Multiusuário TCP:**
+
+- ✅ Servidor TCP concorrente aceitando múltiplos clientes
+- ✅ Cada cliente atendido por thread separada
+- ✅ Mensagens retransmitidas para todos os clientes (broadcast)
+- ✅ Logging concorrente usando libtslog
+- ✅ Cliente CLI para conectar, enviar e receber mensagens
+- ✅ Proteção de estruturas compartilhadas (lista de clientes, histórico)
